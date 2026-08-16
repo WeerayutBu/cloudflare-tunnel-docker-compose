@@ -1,33 +1,46 @@
 .DEFAULT_GOAL := help
 
 COMPOSE := docker compose
+TERRAFORM ?= terraform
+TF := $(TERRAFORM) -chdir=terraform
+TFVARS := terraform/terraform.tfvars
 
-.PHONY: help setup validate up down restart logs ps pull
+.PHONY: help setup plan deploy down logs destroy
 
-help: ## Show available targets
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}'
+help:
+	@echo "make setup    Create terraform.tfvars"
+	@echo "make plan     Preview Cloudflare changes"
+	@echo "make deploy   Apply Terraform and start the demo"
+	@echo "make logs     Follow container logs"
+	@echo "make down     Stop the containers"
+	@echo "make destroy  Stop everything and delete Cloudflare resources"
 
-setup: ## Create .env from .env.example (if missing)
-	@if [ -f .env ]; then echo ".env already exists"; \
-	else cp .env.example .env && chmod 600 .env && echo "Created .env — paste your tunnel token inside"; fi
+setup:
+	@test -f $(TFVARS) || cp terraform/terraform.tfvars.example $(TFVARS)
+	@chmod 600 $(TFVARS)
+	@echo "Edit $(TFVARS), then run: make plan"
 
-validate: ## Validate the Compose configuration
-	$(COMPOSE) config --quiet
+plan:
+	@umask 077; $(TF) init
+	@umask 077; $(TF) plan
 
-up: validate ## Start all services in the background
+deploy:
+	@umask 077; $(TF) init
+	@umask 077; $(TF) apply
+	@set -eu; \
+	token="$$( $(TF) output -raw tunnel_token )"; \
+	umask 077; \
+	printf 'CLOUDFLARE_TUNNEL_TOKEN=%s\n' "$$token" > .env; \
+	chmod 600 .env
 	$(COMPOSE) up -d
 
-down: ## Stop and remove all services
-	$(COMPOSE) down
+down:
+	@CLOUDFLARE_TUNNEL_TOKEN=unused $(COMPOSE) down
 
-restart: ## Restart all services
-	$(COMPOSE) up -d --force-recreate
-
-logs: ## Follow logs from all services
+logs:
 	$(COMPOSE) logs -f
 
-ps: ## Show service status
-	$(COMPOSE) ps
-
-pull: ## Pull the pinned images
-	$(COMPOSE) pull
+destroy:
+	@test -n "$$CLOUDFLARE_API_TOKEN" || { echo "Export CLOUDFLARE_API_TOKEN first"; exit 1; }
+	@$(MAKE) --no-print-directory down
+	@umask 077; $(TF) destroy

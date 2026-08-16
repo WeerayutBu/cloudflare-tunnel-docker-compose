@@ -1,6 +1,6 @@
 # Cloudflare Tunnel Docker Demo
 
-A small Docker Compose demo that exposes frontend and backend containers through Cloudflare Tunnel and nginx—without opening a host port.
+A small Docker Compose demo that exposes frontend and backend containers through Cloudflare Tunnel and nginx.
 
 ```mermaid
 flowchart LR
@@ -11,66 +11,84 @@ flowchart LR
     nginx -->|/backend/| backend
 ```
 
+Terraform creates the tunnel, public hostname route, and DNS record. Docker Compose runs `cloudflared`, nginx, frontend, and backend.
+
 ## Requirements
 
 - Docker, Docker Compose, and Make
-- A Cloudflare account with a domain managed by Cloudflare
+- Terraform 1.5 or newer
+- A domain managed by Cloudflare
 
-## Quick start
+## Setup
 
-### 1. Create the tunnel
+1. Open [Cloudflare API Tokens](https://dash.cloudflare.com/profile/api-tokens), then select **Create Token → Custom token → Get started**.
 
-In the [Cloudflare dashboard](https://dash.cloudflare.com), go to **Networking → Tunnels → Create tunnel**. After creating it:
+   Add these permissions:
 
-- **Overview → Add a replica** (OS: **Docker**): copy the `eyJ...` token.
-- Go to **Networking → Tunnels → select your tunnel → Routes → Add route → Published application**. Choose a hostname and set **Service URL** to `http://nginx:80`.
+   | Type | Permission | Access |
+   | --- | --- | --- |
+   | Account | Cloudflare Tunnel | Edit |
+   | Account | Access: Apps and Policies | Edit |
+   | Account | Access: Organizations, Identity Providers, and Groups | Read |
+   | Zone | DNS | Edit |
 
-Cloudflare automatically creates a DNS record similar to:
+2. Export the token:
 
-```text
-Type:      CNAME
-Name:      demo.example.com
-Points to: <TUNNEL-UUID>.cfargotunnel.com
-```
+   ```bash
+   read -rsp 'Cloudflare API token: ' CLOUDFLARE_API_TOKEN
+   export CLOUDFLARE_API_TOKEN
+   ```
 
-### 2. Run the demo
+3. Create `terraform/terraform.tfvars`:
+
+   ```bash
+   make setup
+   ```
+
+   Find the IDs in the Cloudflare dashboard:
+
+   | ID | Direct location | Action |
+   | --- | --- | --- |
+   | Account ID | [Account Home](https://dash.cloudflare.com/?to=%2F%3Aaccount%2Fhome) | Press `Ctrl/Cmd + K`, search `Copy account ID`, then select it |
+   | Zone ID | [Domains](https://dash.cloudflare.com/?to=%2F%3Aaccount%2Fdomains%2Foverview) | Select your domain, then copy **Zone ID** from **Overview → API** |
+
+   Edit `terraform/terraform.tfvars`:
+
+   ```hcl
+   cloudflare_account_id = "your-account-id"
+   cloudflare_zone_id    = "your-zone-id"
+   hostname              = "demo.example.com"
+
+   enable_access         = true
+   access_allowed_emails = ["friend@example.com"]
+   ```
+
+   - `enable_access = true`: listed emails sign in with the account's existing one-time PIN.
+   - `enable_access = false`: the hostname is public.
+
+   If needed, enable [One-time PIN](https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/one-time-pin/) under **Zero Trust → Integrations → Identity providers**.
+
+   Use a new hostname. Terraform does not automatically import resources created in the dashboard.
+
+4. Preview and deploy:
+
+   ```bash
+   make plan
+   make deploy
+   ```
+
+Open the hostname you configured. Run `make logs` if you need to inspect the containers.
+
+## Stop or remove
 
 ```bash
-make setup
+make down     # Stop containers; keep Cloudflare resources.
+make destroy  # Stop containers and delete Cloudflare resources.
 ```
 
-Paste the token into `.env`:
+Export `CLOUDFLARE_API_TOKEN` again before `make destroy` if you opened a new shell.
 
-```dotenv
-CLOUDFLARE_TUNNEL_TOKEN=eyJ...
-```
-
-Then run:
-
-```bash
-make up
-```
-
-### 3. Open the hostname
-
-Wait for the tunnel to show **Healthy**, then visit the hostname. If needed, run `make logs`.
-
-## Optional: protect it with an email PIN
-
-1. Enable **One-time PIN** at **Zero Trust → Integrations → Identity providers**.
-2. Go to **Zero Trust → Access controls → Applications → Add application → Self-hosted and private**, then create an application for the same hostname.
-3. Add this **Allow** policy and save:
-
-```text
-Name:    Allowed visitors
-Action:  Allow
-Include: Emails → friend@example.com
-Require: Login Methods → One-time PIN
-```
-
-Replace the email and keep an allowlist. See the [Tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/) and [One-time PIN](https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/one-time-pin/) guides.
-
-> Permissions: account owner, or **Cloudflare Access** + **DNS** + **Load Balancer**.
+Terraform state contains the tunnel token. The repository ignores state, `.env`, and `terraform.tfvars`; do not commit them.
 
 ## Routing
 
@@ -79,7 +97,3 @@ Replace the email and keep an allowlist. See the [Tunnel](https://developers.clo
 | `/` | Frontend |
 | `/backend` | Redirect to `/backend/` |
 | `/backend/*` | Backend (prefix removed) |
-
-## Customize
-
-Replace the `frontend` or `backend` service image in `docker-compose.yml`, then edit routing in `nginx/nginx.conf`. Run `make help` for all commands.

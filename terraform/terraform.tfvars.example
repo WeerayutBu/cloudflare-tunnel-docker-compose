@@ -1,0 +1,6 @@
+cloudflare_account_id = "0123456789abcdef0123456789abcdef"
+cloudflare_zone_id    = "fedcba9876543210fedcba9876543210"
+hostname              = "demo.example.com"
+
+enable_access         = true
+access_allowed_emails = ["friend@example.com"]
