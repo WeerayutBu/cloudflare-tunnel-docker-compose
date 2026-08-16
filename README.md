@@ -13,25 +13,45 @@ flowchart LR
 
 ## Requirements
 
-- Docker and Docker Compose
-- A Cloudflare account and a remotely managed tunnel
+- Docker, Docker Compose, and Make
+- A Cloudflare account with a domain managed by Cloudflare
 
 ## Setup
 
-1. Open **Cloudflare Dashboard → Networking → Tunnels**, select **Create tunnel**, and give it a name.
-2. Open the tunnel's **Routes** tab and add a **Published application**:
-   - Hostname: a domain or subdomain managed by Cloudflare
-   - Service URL: `http://nginx:80`
-3. On **Overview**, select **Add a replica** and copy only the `eyJ...` token from the install command. Treat it like a password.
-4. Configure and start the demo:
+### 1. Create a tunnel
+
+In the [Cloudflare dashboard](https://dash.cloudflare.com), go to **Networking → Tunnels → Create tunnel**, enter a name, and select **Create**.
+
+### 2. Copy the token
+
+Open the tunnel's **Overview** tab and select **Add a replica**. Cloudflare shows a command containing `--token eyJ...`; copy only the `eyJ...` value.
+
+### 3. Add a public hostname
+
+Open **Routes → Add route → Published application** and enter:
+
+- **Hostname:** your Cloudflare-managed domain or subdomain
+- **Service URL:** `http://nginx:80`
+
+### 4. Configure the demo
 
 ```bash
 make setup
-# Paste the token after CLOUDFLARE_TUNNEL_TOKEN= in .env
+```
+
+Open `.env` and paste the token:
+
+```dotenv
+CLOUDFLARE_TUNNEL_TOKEN=eyJ...
+```
+
+Then start the containers:
+
+```bash
 make up
 ```
 
-5. Confirm the tunnel is **Healthy** in Cloudflare, then open its public hostname. If outbound traffic is restricted, allow `cloudflared` to reach Cloudflare on port `7844`.
+The tunnel should become **Healthy** in Cloudflare, and the hostname should show the demo page. Use `make logs` if it does not connect. On a restricted network, allow outbound port `7844`.
 
 ### Cloudflare permissions
 
