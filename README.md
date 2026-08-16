@@ -22,8 +22,16 @@ flowchart LR
 
 In the [Cloudflare dashboard](https://dash.cloudflare.com), go to **Networking → Tunnels → Create tunnel**. After creating it:
 
-- **Overview → Add a replica:** copy only the `eyJ...` token.
+- **Overview → Add a replica** (OS: **Docker**): copy the `eyJ...` token.
 - Go to **Networking → Tunnels → select your tunnel → Routes → Add route → Published application**. Choose a hostname and set **Service URL** to `http://nginx:80`.
+
+Cloudflare automatically creates a DNS record similar to:
+
+```text
+Type:      CNAME
+Name:      demo.example.com
+Points to: <TUNNEL-UUID>.cfargotunnel.com
+```
 
 ### 2. Run the demo
 
@@ -60,21 +68,18 @@ Include: Emails → friend@example.com
 Require: Login Methods → One-time PIN
 ```
 
-Replace the example email with your visitor's address. Do not allow One-time PIN without an email allowlist. See Cloudflare's [tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/) and [One-time PIN](https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/one-time-pin/) guides.
+Replace the email and keep an allowlist. See the [Tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/) and [One-time PIN](https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/one-time-pin/) guides.
 
-> Account owners already have permission. An invited member needs **Cloudflare Access**, **DNS**, and **Load Balancer** permissions.
+> Permissions: account owner, or **Cloudflare Access** + **DNS** + **Load Balancer**.
 
 ## Routing
 
-| Path | Service |
-|------|---------|
-| `/` | Static frontend demo |
-| `/backend/` | Placeholder backend container |
-
-`/backend` redirects to `/backend/`. Follow logs with `make logs` and stop everything with `make down`.
+| Path | Result |
+|------|--------|
+| `/` | Frontend |
+| `/backend` | Redirect to `/backend/` |
+| `/backend/*` | Backend (prefix removed) |
 
 ## Customize
 
 Replace the `frontend` or `backend` service image in `docker-compose.yml`, then edit routing in `nginx/nginx.conf`. Run `make help` for all commands.
-
-> This is a demo. For production, use managed secrets, monitoring, and a tested image-update process.
