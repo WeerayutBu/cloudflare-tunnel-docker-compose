@@ -67,12 +67,17 @@ First, go to **Zero Trust → Integrations → Identity providers → Add new id
    - **Subdomain and domain:** the same hostname used by the tunnel
    - **Path:** leave blank to protect the entire hostname
 
-7. Under **Access policies**, create a policy with:
+7. Under **Access policies**, create a policy such as:
 
-   - **Policy name:** `Allowed visitors`
-   - **Action:** `Allow`
-   - **Include → Emails:** the visitor's email address
-   - **Require → Login Methods:** `One-time PIN`
+   ```text
+   Policy name: Overleaf allowed users
+   Action: Allow
+   Include:
+     Selector: Emails
+     Value: friend@example.com
+   ```
+
+   Replace the example address with the visitor's email, then add **Require → Login Methods → One-time PIN**.
 
 8. Save the application, open its hostname, and verify the visitor can sign in with the emailed code.
 
