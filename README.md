@@ -58,7 +58,7 @@ Wait for the tunnel to show **Healthy**, then visit the hostname. If needed, run
 ## Optional: protect it with an email PIN
 
 1. Enable **One-time PIN** at **Zero Trust → Integrations → Identity providers**.
-2. At **Access controls → Applications**, create a **Self-hosted and private** application for the same hostname.
+2. Go to **Zero Trust → Access controls → Applications → Add application → Self-hosted and private**, then create an application for the same hostname.
 3. Add this **Allow** policy and save:
 
 ```text
