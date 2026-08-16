@@ -16,81 +16,53 @@ flowchart LR
 - Docker, Docker Compose, and Make
 - A Cloudflare account with a domain managed by Cloudflare
 
-## Setup
+## Quick start
 
-### 1. Create a tunnel
+### 1. Create the tunnel
 
-In the [Cloudflare dashboard](https://dash.cloudflare.com), go to **Networking → Tunnels → Create tunnel**, enter a name, and select **Create**.
+In the [Cloudflare dashboard](https://dash.cloudflare.com), open **Networking → Tunnels → Create tunnel**. Inside the new tunnel:
 
-### 2. Copy the token
+- **Overview → Add a replica:** copy only the `eyJ...` token.
+- **Routes → Add route → Published application:** choose a hostname and set **Service URL** to `http://nginx:80`.
 
-Open the tunnel's **Overview** tab and select **Add a replica**. Cloudflare shows a command containing `--token eyJ...`; copy only the `eyJ...` value.
-
-### 3. Add a public hostname
-
-Open **Routes → Add route → Published application** and enter:
-
-- **Hostname:** your Cloudflare-managed domain or subdomain
-- **Service URL:** `http://nginx:80`
-
-### 4. Configure the demo
+### 2. Run the demo
 
 ```bash
 make setup
 ```
 
-Open `.env` and paste the token:
+Paste the token into `.env`:
 
 ```dotenv
 CLOUDFLARE_TUNNEL_TOKEN=eyJ...
 ```
 
-Then start the containers:
+Then run:
 
 ```bash
 make up
 ```
 
-The tunnel should become **Healthy** in Cloudflare, and the hostname should show the demo page. Use `make logs` if it does not connect. On a restricted network, allow outbound port `7844`.
+### 3. Open the hostname
 
-### 5. Allow someone to visit the subdomain
+Wait for the tunnel to show **Healthy**, then visit the hostname. If needed, run `make logs`.
 
-First, go to **Zero Trust → Integrations → Identity providers → Add new identity provider** and enable **One-time PIN**. Then:
+## Optional: protect it with an email PIN
 
-1. Open the **Cloudflare Dashboard** and go to **Zero Trust**.
-2. Open **Access controls → Applications**.
-3. Select **Create new application**.
-4. Choose **Self-hosted and private**.
-5. Set **Application name** to `Tunnel Demo`.
-6. Select **Add public hostname** and enter:
+1. Enable **One-time PIN** at **Zero Trust → Integrations → Identity providers**.
+2. At **Access controls → Applications**, create a **Self-hosted and private** application for the same hostname.
+3. Add this **Allow** policy and save:
 
-   - **Subdomain and domain:** the same hostname used by the tunnel
-   - **Path:** leave blank to protect the entire hostname
+```text
+Name:    Allowed visitors
+Action:  Allow
+Include: Emails → friend@example.com
+Require: Login Methods → One-time PIN
+```
 
-7. Under **Access policies**, create a policy such as:
+Replace the example email with your visitor's address. Do not allow One-time PIN without an email allowlist. See Cloudflare's [tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/) and [One-time PIN](https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/one-time-pin/) guides.
 
-   ```text
-   Name:    Overleaf allowed users
-   Action:  Allow
-   Include: Emails → friend@example.com
-   Require: Login Methods → One-time PIN
-   ```
-
-   Replace `friend@example.com` with the visitor's email address.
-
-8. Save the application, open its hostname, and verify the visitor can sign in with the emailed code.
-
-Never allow **One-time PIN** without an email allowlist; that would allow any valid email address to authenticate. See Cloudflare's [self-hosted application](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app/) and [One-time PIN](https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/one-time-pin/) guides.
-
-### Cloudflare permissions
-
-Account owners already have access. For another member, grant the least scope possible:
-
-- **Cloudflare Access** to create and configure tunnels.
-- **DNS** and **Load Balancer** to publish a public hostname.
-- When possible, scope access to the required account, domain, or individual tunnel.
-
-See Cloudflare's [tunnel setup](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/) and [permission reference](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/configure-tunnels/remote-tunnel-permissions/).
+> Account owners already have permission. An invited member needs **Cloudflare Access**, **DNS**, and **Load Balancer** permissions.
 
 ## Routing
 
