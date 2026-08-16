@@ -53,6 +53,18 @@ make up
 
 The tunnel should become **Healthy** in Cloudflare, and the hostname should show the demo page. Use `make logs` if it does not connect. On a restricted network, allow outbound port `7844`.
 
+### 5. Add a Zero Trust application
+
+Protect the public hostname with Cloudflare Access:
+
+1. Go to **Zero Trust → Integrations → Identity providers → Add new identity provider** and add **One-time PIN**.
+2. Go to **Access controls → Applications → Add an application** and select **Self-hosted**.
+3. Enter an application name and add the same public hostname used by the tunnel.
+4. Create an **Allow** policy for specific email addresses or trusted email domains, and require **One-time PIN** as the login method.
+5. Save the application, open its hostname, and verify an allowed user can sign in with the emailed code.
+
+Never allow **One-time PIN** without an email allowlist; that would allow any valid email address to authenticate. See Cloudflare's [self-hosted application](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app/) and [One-time PIN](https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/one-time-pin/) guides.
+
 ### Cloudflare permissions
 
 Account owners already have access. For another member, grant the least scope possible:
@@ -62,15 +74,6 @@ Account owners already have access. For another member, grant the least scope po
 - When possible, scope access to the required account, domain, or individual tunnel.
 
 See Cloudflare's [tunnel setup](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/) and [permission reference](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/configure-tunnels/remote-tunnel-permissions/).
-
-### Protect the demo with One-time PIN
-
-1. Go to **Zero Trust → Integrations → Identity providers → Add new identity provider**, then select **One-time PIN**.
-2. Go to **Access controls → Applications**, add a **Self-hosted** application, and enter the same hostname used by the tunnel.
-3. Add an **Allow** policy that includes only specific email addresses or trusted email domains, then select **One-time PIN** as the login method.
-4. Open the hostname and verify an allowed user receives and can use the emailed code.
-
-Do not allow **One-time PIN** by itself—without an email allowlist, any valid email address could gain access. See Cloudflare's [One-time PIN guide](https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/one-time-pin/).
 
 ## Routing
 
@@ -85,4 +88,4 @@ Do not allow **One-time PIN** by itself—without an email allowlist, any valid 
 
 Replace the `frontend` or `backend` service image in `docker-compose.yml`, then edit routing in `nginx/nginx.conf`. Run `make help` for all commands.
 
-> This is a demo. For production, add Cloudflare Access, managed secrets, monitoring, and a tested image-update process.
+> This is a demo. For production, use managed secrets, monitoring, and a tested image-update process.
