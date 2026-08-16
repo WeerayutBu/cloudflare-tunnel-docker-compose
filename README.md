@@ -20,10 +20,10 @@ flowchart LR
 
 ### 1. Create the tunnel
 
-In the [Cloudflare dashboard](https://dash.cloudflare.com), open **Networking → Tunnels → Create tunnel**. Inside the new tunnel:
+In the [Cloudflare dashboard](https://dash.cloudflare.com), go to **Networking → Tunnels → Create tunnel**. After creating it:
 
 - **Overview → Add a replica:** copy only the `eyJ...` token.
-- **Routes → Add route → Published application:** choose a hostname and set **Service URL** to `http://nginx:80`.
+- Go to **Networking → Tunnels → select your tunnel → Routes → Add route → Published application**. Choose a hostname and set **Service URL** to `http://nginx:80`.
 
 ### 2. Run the demo
 
