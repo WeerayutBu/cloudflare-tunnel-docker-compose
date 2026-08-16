@@ -3,7 +3,7 @@
 A small Docker Compose demo that exposes frontend and backend containers through Cloudflare Tunnel and nginx—without opening a host port.
 
 ```mermaid
-flowchart TD
+flowchart LR
     Internet --> Cloudflare[Cloudflare Edge]
     Cloudflare --> cloudflared
     cloudflared --> nginx
