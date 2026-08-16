@@ -34,6 +34,15 @@ Account owners already have access. For another member, grant the least scope po
 
 See Cloudflare's [tunnel setup](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/) and [permission reference](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/configure-tunnels/remote-tunnel-permissions/).
 
+### Protect the demo with One-time PIN
+
+1. Go to **Zero Trust → Integrations → Identity providers → Add new identity provider**, then select **One-time PIN**.
+2. Go to **Access controls → Applications**, add a **Self-hosted** application, and enter the same hostname used by the tunnel.
+3. Add an **Allow** policy that includes only specific email addresses or trusted email domains, then select **One-time PIN** as the login method.
+4. Open the hostname and verify an allowed user receives and can use the emailed code.
+
+Do not allow **One-time PIN** by itself—without an email allowlist, any valid email address could gain access. See Cloudflare's [One-time PIN guide](https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/one-time-pin/).
+
 ## Routing
 
 | Path | Service |
