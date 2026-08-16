@@ -53,15 +53,28 @@ make up
 
 The tunnel should become **Healthy** in Cloudflare, and the hostname should show the demo page. Use `make logs` if it does not connect. On a restricted network, allow outbound port `7844`.
 
-### 5. Add a Zero Trust application
+### 5. Allow someone to visit the subdomain
 
-Protect the public hostname with Cloudflare Access:
+First, go to **Zero Trust → Integrations → Identity providers → Add new identity provider** and enable **One-time PIN**. Then:
 
-1. Go to **Zero Trust → Integrations → Identity providers → Add new identity provider** and add **One-time PIN**.
-2. Go to **Access controls → Applications → Add an application** and select **Self-hosted**.
-3. Enter an application name and add the same public hostname used by the tunnel.
-4. Create an **Allow** policy for specific email addresses or trusted email domains, and require **One-time PIN** as the login method.
-5. Save the application, open its hostname, and verify an allowed user can sign in with the emailed code.
+1. Open the **Cloudflare Dashboard** and go to **Zero Trust**.
+2. Open **Access controls → Applications**.
+3. Select **Create new application**.
+4. Choose **Self-hosted and private**.
+5. Set **Application name** to `Tunnel Demo`.
+6. Select **Add public hostname** and enter:
+
+   - **Subdomain and domain:** the same hostname used by the tunnel
+   - **Path:** leave blank to protect the entire hostname
+
+7. Under **Access policies**, create a policy with:
+
+   - **Policy name:** `Allowed visitors`
+   - **Action:** `Allow`
+   - **Include → Emails:** the visitor's email address
+   - **Require → Login Methods:** `One-time PIN`
+
+8. Save the application, open its hostname, and verify the visitor can sign in with the emailed code.
 
 Never allow **One-time PIN** without an email allowlist; that would allow any valid email address to authenticate. See Cloudflare's [self-hosted application](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app/) and [One-time PIN](https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/one-time-pin/) guides.
 
