@@ -70,14 +70,13 @@ First, go to **Zero Trust → Integrations → Identity providers → Add new id
 7. Under **Access policies**, create a policy such as:
 
    ```text
-   Policy name: Overleaf allowed users
-   Action: Allow
-   Include:
-     Selector: Emails
-     Value: friend@example.com
+   Name:    Overleaf allowed users
+   Action:  Allow
+   Include: Emails → friend@example.com
+   Require: Login Methods → One-time PIN
    ```
 
-   Replace the example address with the visitor's email, then add **Require → Login Methods → One-time PIN**.
+   Replace `friend@example.com` with the visitor's email address.
 
 8. Save the application, open its hostname, and verify the visitor can sign in with the emailed code.
 
