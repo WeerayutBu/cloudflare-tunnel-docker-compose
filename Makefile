@@ -2,23 +2,26 @@
 
 COMPOSE := docker compose
 
-.PHONY: help setup up down restart logs ps pull clean
+.PHONY: help setup validate up down restart logs ps pull
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}'
 
 setup: ## Create .env from .env.example (if missing)
 	@if [ -f .env ]; then echo ".env already exists"; \
-	else cp .env.example .env && echo "Created .env — paste your tunnel token inside"; fi
+	else cp .env.example .env && chmod 600 .env && echo "Created .env — paste your tunnel token inside"; fi
 
-up: ## Start all services in the background
+validate: ## Validate the Compose configuration
+	$(COMPOSE) config --quiet
+
+up: validate ## Start all services in the background
 	$(COMPOSE) up -d
 
 down: ## Stop and remove all services
 	$(COMPOSE) down
 
 restart: ## Restart all services
-	$(COMPOSE) restart
+	$(COMPOSE) up -d --force-recreate
 
 logs: ## Follow logs from all services
 	$(COMPOSE) logs -f
@@ -26,8 +29,5 @@ logs: ## Follow logs from all services
 ps: ## Show service status
 	$(COMPOSE) ps
 
-pull: ## Pull latest images
+pull: ## Pull the pinned images
 	$(COMPOSE) pull
-
-clean: ## Stop services and remove volumes and orphans
-	$(COMPOSE) down -v --remove-orphans

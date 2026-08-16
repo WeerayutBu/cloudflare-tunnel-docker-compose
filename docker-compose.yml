@@ -1,20 +1,20 @@
 services:
   cloudflared:
-    image: cloudflare/cloudflared:latest
+    image: cloudflare/cloudflared:2026.8.2
     restart: unless-stopped
     command: tunnel --no-autoupdate run
     environment:
-      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?Set CLOUDFLARE_TUNNEL_TOKEN in .env}
     networks:
       - tunnel_net
     depends_on:
       - nginx
 
   nginx:
-    image: nginx:alpine
+    image: nginx:1.30.4-alpine
     restart: unless-stopped
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
       - tunnel_net
     depends_on:
@@ -22,7 +22,7 @@ services:
       - backend
 
   frontend:
-    image: nginx:alpine
+    image: nginx:1.30.4-alpine
     restart: unless-stopped
     volumes:
       - ./frontend:/usr/share/nginx/html:ro
@@ -30,10 +30,8 @@ services:
       - tunnel_net
 
   backend:
-    image: nginx:alpine          # replace with your backend image
+    image: nginx:1.30.4-alpine # Replace with your backend image.
     restart: unless-stopped
-    # build:
-    #   context: ./backend
     networks:
       - tunnel_net
 

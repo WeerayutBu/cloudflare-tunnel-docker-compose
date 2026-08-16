@@ -1,53 +1,38 @@
-# Cloudflare Tunnel — Docker Compose
+# Cloudflare Tunnel Docker Demo
 
-Exposes local Docker services to the internet through a Cloudflare Tunnel, with nginx routing traffic to a frontend and backend container.
-
-```mermaid
-graph LR
-    Internet((Internet)) -->|HTTPS| CF[Cloudflare Edge]
-    CF <-->|Tunnel| CFD
-
-    subgraph Docker["Docker Compose"]
-        CFD[cloudflared]
-        Nginx[nginx]
-        Frontend[frontend]
-        Backend[backend]
-
-        CFD --> Nginx
-        Nginx -->|/| Frontend
-        Nginx -->|/backend/| Backend
-    end
-```
+A small Docker Compose demo that exposes frontend and backend containers through Cloudflare Tunnel and nginx—without opening a host port.
 
 ## Requirements
 
 - Docker and Docker Compose
-- A Cloudflare account with Zero Trust enabled
+- A Cloudflare account and a remotely managed tunnel
 
 ## Setup
 
-1. Create a tunnel at [Cloudflare Zero Trust](https://one.dash.cloudflare.com) → Networks → Tunnels
-2. Set the public hostname service to `http://nginx:80`
-3. Copy the tunnel token
+1. In [Cloudflare Zero Trust](https://one.dash.cloudflare.com), create a tunnel and set its public hostname service to `http://nginx:80`.
+2. Create your local environment file:
 
 ```bash
-cp .env.example .env   # paste the token inside
-docker compose up -d
+make setup
+```
+
+3. Paste the tunnel token into `.env`, then start the demo:
+
+```bash
+make up
 ```
 
 ## Routing
 
 | Path | Service |
 |------|---------|
-| `/` | frontend |
-| `/backend/` | backend |
+| `/` | Static frontend demo |
+| `/backend/` | Placeholder backend container |
 
-Routes are defined in [nginx/nginx.conf](nginx/nginx.conf).
+`/backend` redirects to `/backend/`. Follow logs with `make logs` and stop everything with `make down`.
 
-## Services
+## Customize
 
-`frontend` and `backend` currently point at placeholder `nginx:alpine` images in [docker-compose.yml](docker-compose.yml). Swap in your own image, or uncomment the `build:` block to build from a local `./frontend` or `./backend` directory.
+Replace the `frontend` or `backend` service image in `docker-compose.yml`, then edit routing in `nginx/nginx.conf`. Run `make help` for all commands.
 
-## Notes
-
-- `.env` holds your tunnel token and is gitignored — never commit it.
+> This is a demo. For production, add Cloudflare Access, managed secrets, monitoring, and a tested image-update process.
