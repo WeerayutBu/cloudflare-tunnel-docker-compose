@@ -9,18 +9,30 @@ A small Docker Compose demo that exposes frontend and backend containers through
 
 ## Setup
 
-1. In [Cloudflare Zero Trust](https://one.dash.cloudflare.com), create a tunnel and set its public hostname service to `http://nginx:80`.
-2. Create your local environment file:
+1. Open **Cloudflare Dashboard → Networking → Tunnels**, select **Create tunnel**, and give it a name.
+2. Open the tunnel's **Routes** tab and add a **Published application**:
+   - Hostname: a domain or subdomain managed by Cloudflare
+   - Service URL: `http://nginx:80`
+3. On **Overview**, select **Add a replica** and copy only the `eyJ...` token from the install command. Treat it like a password.
+4. Configure and start the demo:
 
 ```bash
 make setup
-```
-
-3. Paste the tunnel token into `.env`, then start the demo:
-
-```bash
+# Paste the token after CLOUDFLARE_TUNNEL_TOKEN= in .env
 make up
 ```
+
+5. Confirm the tunnel is **Healthy** in Cloudflare, then open its public hostname. If outbound traffic is restricted, allow `cloudflared` to reach Cloudflare on port `7844`.
+
+### Cloudflare permissions
+
+Account owners already have access. For another member, grant the least scope possible:
+
+- **Cloudflare Access** to create and configure tunnels.
+- **DNS** and **Load Balancer** to publish a public hostname.
+- When possible, scope access to the required account, domain, or individual tunnel.
+
+See Cloudflare's [tunnel setup](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/) and [permission reference](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/configure-tunnels/remote-tunnel-permissions/).
 
 ## Routing
 
